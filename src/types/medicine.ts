@@ -1,6 +1,6 @@
 export interface Medicine {
   id: string;
-  name: string;
+  medicineName: string;
   dose: string;
   timesPerDay: number;
   durationDays: number;
@@ -9,7 +9,7 @@ export interface Medicine {
 
 export const defaultMedicine: Medicine = {
   id: "1",
-  name: "paracetamol",
+  medicineName: "paracetamol",
   dose: "1",
   timesPerDay: 0,
   durationDays: 0,

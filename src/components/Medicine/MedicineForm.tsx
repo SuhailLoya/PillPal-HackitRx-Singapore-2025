@@ -1,11 +1,8 @@
 import { useState } from "react";
 import type { Medicine } from "@/types/medicine";
 
-interface Props {
-  onAdd: (med: Medicine) => void;
-}
 
-const MedicineForm = ({ onAdd }: Props) => {
+const MedicineForm = () => {
   const [form, setForm] = useState<Partial<Medicine>>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -14,20 +11,17 @@ const MedicineForm = ({ onAdd }: Props) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name) return;
-    onAdd({
-      ...(form as Medicine),
-      id: Date.now().toString(),
-    });
+    if (!form.medicineName) return;
+   
     setForm({});
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-2 p-3 border rounded-lg">
       <input
-        name="name"
+        name="medicineName"
         placeholder="Medicine Name"
-        value={form.name || ""}
+        value={form.medicineName || ""}
         onChange={handleChange}
         className="w-full border p-2 rounded"
       />

@@ -3,7 +3,7 @@ import type { Medicine } from "@/types/medicine";
 const MedicineCard = ({ medicine }: { medicine: Medicine }) => {
   return (
     <div className="p-3 border rounded-xl shadow-md">
-      <h2 className="font-bold">{medicine.name}</h2>
+      <h2 className="font-bold">{medicine.medicineName}</h2>
       <p>{medicine.dose}</p>
       <p>
         {medicine.timesPerDay} times/day · {medicine.durationDays} days
