@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import VoiceButton from "@/components/Buttons/VoiceButton";
 import QueryButton from "@/components/Buttons/QueryButton";
 import { Button } from "@/components/ui/button";
-import MedicineList from "@/components/Medicine/MedicineList";
+import MedicineCardList from "@/components/Medicine/MedicineCardList";
+import MedicineDispenserBoxList from "@/components/Medicine/MedicineDispenserBoxList";
 import { type Medicine } from "@/types/medicine";
 import { useTheme } from "@/context/themeContext";
 
@@ -22,7 +23,7 @@ function MainPage() {
                 // @ts-expect-error - Assuming data is an array of objects with the expected structure
                 const formatted: Medicine[] = data.map((item) => ({
                     id: item.row_number.toString(),
-                    name: item["Medicine name"] || "",
+                    medicineName: item["Medicine name"] || "",
                     dose: item["dose"] || "",
                     timesPerDay: Number(item["times_per_day:"]) || 0,
                     durationDays: Number(item["duration_days:"]) || 0,
@@ -50,7 +51,8 @@ function MainPage() {
                     {theme === "light" ? "Dark Mode" : "Light Mode"}
                 </Button>
             </div>
-            <MedicineList medicines={medicines} />
+            <MedicineCardList medicines={medicines} />
+            <MedicineDispenserBoxList medicines={medicines} />
         </div>
     );
 }
