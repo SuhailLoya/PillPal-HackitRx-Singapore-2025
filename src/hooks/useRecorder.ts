@@ -1,11 +1,12 @@
 import { useRef } from "react";
+import { useState } from "react";
 
 const useRecorder = () => {
     const recognitionRef = useRef(null);
+    const [transcript, setTranscript] = useState<string>("");
 
     if (!recognitionRef.current && "webkitSpeechRecognition" in window) {
-
-        const SpeechRecognition = (window).webkitSpeechRecognition;
+        const SpeechRecognition = window.webkitSpeechRecognition;
         // @ts-expect-error - TypeScript doesn't recognize webkitSpeechRecognition
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
@@ -13,9 +14,10 @@ const useRecorder = () => {
 
         // @ts-expect-error - TypeScript doesn't recognize onresult event variable type
         recognition.onresult = (event) => {
-            const transcript =
+            const lastTranscript =
                 event.results[event.results.length - 1][0].transcript;
-            console.log("User said:", transcript);
+            console.log("User said:", lastTranscript);
+            setTranscript(lastTranscript); // update state
             // @ts-expect-error - Assuming you have a function to handle the stop of recording
             recognitionRef.current?.stop();
         };
@@ -28,7 +30,7 @@ const useRecorder = () => {
         recognitionRef.current?.start();
     };
 
-    return { record };
+    return { record, transcript };
 };
 
 export default useRecorder;
