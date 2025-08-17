@@ -23,11 +23,11 @@ function MainPage() {
                 // @ts-expect-error - Assuming data is an array of objects with the expected structure
                 const formatted: Medicine[] = data.map((item) => ({
                     id: item.row_number.toString(),
-                    medicineName: item["Medicine name"] || "",
+                    medicineName: item["medicineName"] || "",
                     dose: item["dose"] || "",
-                    timesPerDay: Number(item["times_per_day:"]) || 0,
-                    durationDays: Number(item["duration_days:"]) || 0,
-                    instructions: item["instructions:"]?.trim() || "",
+                    timesPerDay: Number(item["timesPerDay"]) || 0,
+                    durationDays: Number(item["durationDays"]) || 0,
+                    instructions: item["instructions"]?.trim() || "",
                 }));
 
                 setMedicines(formatted);
