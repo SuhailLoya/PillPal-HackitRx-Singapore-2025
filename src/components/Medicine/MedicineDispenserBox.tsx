@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { type Medicine } from "@/types/medicine";
+import { calcRemainingTimeForMedicine } from "@/lib/utils";
 
 interface MedicineDispenserBoxProps {
     medicine: Medicine;
@@ -8,10 +9,11 @@ interface MedicineDispenserBoxProps {
 
 export default function MedicineDispenserBox({
     medicine,
-    onDispense
+    onDispense,
 }: MedicineDispenserBoxProps) {
     const [pills, setPills] = useState<number>(5); // starting number of pills
     const [animating, setAnimating] = useState(false);
+    const remainingMs = calcRemainingTimeForMedicine(medicine);
 
     const dispense = () => {
         if (pills === 0 || animating) return;
@@ -26,6 +28,8 @@ export default function MedicineDispenserBox({
 
     const pillSize = 20; // px
     const spacing = 4; // px between pills
+
+    const color = remainingMs <= 0 ? "bg-green-600" : "bg-blue-500";
 
     return (
         <div className="border rounded p-3 shadow w-32 flex flex-col items-center">
@@ -57,7 +61,7 @@ export default function MedicineDispenserBox({
 
             <button
                 onClick={dispense}
-                className="mt-3 px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400 text-sm"
+                className={`mt-3 px-3 py-1 ${color} text-white rounded hover:${color} disabled:bg-gray-400 text-sm`}
                 disabled={pills === 0 || animating}
             >
                 Dispense
