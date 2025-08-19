@@ -83,7 +83,7 @@ function MainPage() {
     const readNextReply = () => {
         console.log(unreadReplies);
         if (unreadReplies.length === 0) return;
-        const nextReply = unreadReplies[0];
+        const nextReply = unreadReplies[unreadReplies.length - 1];
         console.log("Reading reply:", nextReply);
         scheduleSpeak(nextReply.message);
         setReadReplyIds((prev) => [...prev, nextReply.id]);
