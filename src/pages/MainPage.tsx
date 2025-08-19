@@ -78,6 +78,7 @@ function MainPage() {
         );
 
         const med = medicines.find((m) => m.medicineName === medicineName);
+
         if (!med) return;
 
         const supposedTime = med.nextDoseTime;
@@ -86,6 +87,7 @@ function MainPage() {
             (actualTime.getTime() - supposedTime.getTime()) / 60000
         );
         const isMiss = diffMinutes > 15 ? 1 : 0;
+        const isEarlyDispense = actualTime < supposedTime ? 1 : 0;
 
         const supposedLastTakenTime = getDateStringInSGT(supposedTime);
         const actualLastTakenTime = getDateStringInSGT(actualTime);
@@ -100,6 +102,7 @@ function MainPage() {
                         supposedLastTakenTime,
                         actualLastTakenTime,
                         isMiss: isMiss.toString(),
+                        isEarlyDispense: isEarlyDispense.toString(),
                     }),
                 }
             );

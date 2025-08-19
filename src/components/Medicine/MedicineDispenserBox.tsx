@@ -29,7 +29,7 @@ export default function MedicineDispenserBox({
     const pillSize = 20; // px
     const spacing = 4; // px between pills
 
-    const color = remainingMs <= 0 ? "bg-green-600" : "bg-blue-500";
+    const color = remainingMs <= 0 ? "bg-green-600" : "bg-red-500";
 
     return (
         <div className="border rounded p-3 shadow w-32 flex flex-col items-center">
