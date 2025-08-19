@@ -55,3 +55,8 @@ export function calcRemainingTimeForMedicine(
     const remaining = Math.max(0, nextDose.getTime() - Date.now());
     return remaining
 }
+
+export function scheduleSpeak(message: string) {
+  const utterance = new SpeechSynthesisUtterance(message);
+  speechSynthesis.speak(utterance);
+}

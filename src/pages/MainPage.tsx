@@ -11,7 +11,9 @@ import {
     calcRemainingTimeForMedicine,
     getDateStringInSGT,
     parseSGTStringToDate,
+    scheduleSpeak,
 } from "@/lib/utils";
+import type { Reply } from "@/types/reply";
 
 function MainPage() {
     const [isStarted, setIsStarted] = useState(false);
@@ -19,6 +21,9 @@ function MainPage() {
     const { theme, toggle } = useTheme();
     const [, setCounter] = useState(0); // ticker
     const alarmAudioRef = useRef<HTMLAudioElement | null>(null);
+
+    const [readReplyIds, setReadReplyIds] = useState<string[]>([]);
+    const [replies, setReplies] = useState<Reply[]>([]);
 
     // --- Ticker updates every second // can change to every minute if needed
     useEffect(() => {
@@ -29,6 +34,58 @@ function MainPage() {
         );
         return () => clearInterval(interval);
     }, [isStarted]);
+
+    useEffect(() => {
+        if (!isStarted) return;
+        const interval = setInterval(
+            () => setCounter((prev) => prev + 1),
+            1000
+        );
+        return () => clearInterval(interval);
+    }, [isStarted]);
+
+    // --- Poll replies every 15s
+    useEffect(() => {
+        if (!isStarted) return;
+        const fetchReplies = async () => {
+            try {
+                const res = await fetch(
+                    "https://n8n.n8n-projects.dev/webhook/sheets?sheet=Email%20Replies%20Log"
+                );
+                const data = await res.json();
+
+                // @ts-expect-error assuming backend shape
+                const formatted: Reply[] = data.map((item) => ({
+                    id: item.replyId,
+                    date: item.date,
+                    role: item.role,
+                    message: item.message,
+                }));
+
+                setReplies(formatted);
+            } catch (err) {
+                console.error("Failed to fetch replies:", err);
+            }
+        };
+
+        fetchReplies();
+        const interval = setInterval(fetchReplies, 15000);
+        return () => clearInterval(interval);
+    }, [isStarted]);
+
+    const unreadReplies: Reply[] = replies.filter(
+        (reply) => !readReplyIds.includes(reply.id)
+    );
+
+    const readNextReply = () => {
+        console.log(unreadReplies);
+        if (unreadReplies.length === 0) return;
+        const nextReply = unreadReplies[0];
+        console.log("Reading reply:", nextReply);
+        scheduleSpeak(nextReply.message);
+        setReadReplyIds((prev) => [...prev, nextReply.id]);
+        return;
+    };
 
     // --- Play/Stop Alarm Sound
     const activeAlarms = medicines.filter(
@@ -190,7 +247,10 @@ function MainPage() {
     return (
         <div className="flex flex-col p-4 space-y-4">
             <div className="flex gap-4">
-                <VoiceButton />
+                <VoiceButton
+                    readNextReply={readNextReply}
+                    unreadCount={unreadReplies.length}
+                />
                 <QueryButton />
                 <Button
                     onClick={toggle}
