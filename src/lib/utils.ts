@@ -56,6 +56,8 @@ export function calcRemainingTimeForMedicine(m: Medicine): number {
     return remaining;
 }
 
+
+//TODO: make it sequential currently might over write previosu audio
 export async function scheduleSpeak(message: string) {
     try {
         const formData = new FormData();
