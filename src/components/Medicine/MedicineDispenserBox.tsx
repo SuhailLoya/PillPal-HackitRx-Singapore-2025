@@ -3,10 +3,12 @@ import { type Medicine } from "@/types/medicine";
 
 interface MedicineDispenserBoxProps {
     medicine: Medicine;
+    onDispense: () => void;
 }
 
 export default function MedicineDispenserBox({
     medicine,
+    onDispense
 }: MedicineDispenserBoxProps) {
     const [pills, setPills] = useState<number>(5); // starting number of pills
     const [animating, setAnimating] = useState(false);
@@ -19,6 +21,7 @@ export default function MedicineDispenserBox({
             setPills((prev) => prev - 1);
             setAnimating(false);
         }, 600); // match animation duration
+        onDispense();
     };
 
     const pillSize = 20; // px

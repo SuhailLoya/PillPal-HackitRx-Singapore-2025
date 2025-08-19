@@ -3,10 +3,12 @@ import { type Medicine } from "@/types/medicine";
 
 interface MedicineDispenserBoxListProps {
     medicines: Medicine[];
+    onDispense: (medicineName: string) => void;
 }
 
 export default function MedicineDispenserBoxList({
     medicines,
+    onDispense
 }: MedicineDispenserBoxListProps) {
     return (
         <div className="flex gap-4">
@@ -19,7 +21,7 @@ export default function MedicineDispenserBoxList({
                         minWidth: "120px",
                     }}
                 >
-                    <MedicineDispenserBox medicine={med} />
+                    <MedicineDispenserBox medicine={med} onDispense={() => onDispense(med.medicineName)} />
                 </div>
             ))}
         </div>
