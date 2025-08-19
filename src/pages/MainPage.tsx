@@ -25,6 +25,9 @@ function MainPage() {
     const [readReplyIds, setReadReplyIds] = useState<string[]>([]);
     const [replies, setReplies] = useState<Reply[]>([]);
 
+    // --- Language state
+    const [languageSetting, setLanguageSetting] = useState("English"); // en = English, zh = Cantonese
+
     // --- Ticker updates every second // can change to every minute if needed
     useEffect(() => {
         if (!isStarted) return;
@@ -251,13 +254,27 @@ function MainPage() {
                     readNextReply={readNextReply}
                     unreadCount={unreadReplies.length}
                 />
-                <QueryButton />
-                <Button
-                    onClick={toggle}
-                    className="ml-auto px-3 py-1 rounded border shadow"
-                >
-                    {theme === "light" ? "Dark Mode" : "Light Mode"}
-                </Button>
+                <QueryButton languageSetting={languageSetting} />
+                {/* Push the right-side controls */}
+                <div className="ml-auto flex gap-2 items-center">
+                    {/* Language dropdown on the left of dark mode */}
+                    <select
+                        value={languageSetting}
+                        onChange={(e) => setLanguageSetting(e.target.value)}
+                        className="border rounded px-2 py-1"
+                    >
+                        <option value="English">English</option>
+                        <option value="Cantonese">Cantonese</option>
+                    </select>
+
+                    {/* Dark Mode toggle */}
+                    <Button
+                        onClick={toggle}
+                        className="px-3 py-1 rounded border shadow"
+                    >
+                        {theme === "light" ? "Dark Mode" : "Light Mode"}
+                    </Button>
+                </div>
             </div>
             <MedicineCardList medicines={medicines} />
             {/* probably there's a better way to handle ondispense logic but suffices for now*/}
