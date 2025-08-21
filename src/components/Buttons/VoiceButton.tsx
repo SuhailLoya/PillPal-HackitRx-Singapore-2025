@@ -9,10 +9,10 @@ const VoiceButton = ({ readNextReply, unreadCount = 0 }: VoiceButtonProps) => {
   return (
     <div className="relative inline-block">
       <Button
-        className="rounded-full h-20 w-20 text-xl relative"
+        className="rounded-full h-20 w-20 text-3xl font-bold relative bg-yellow-700 hover:bg-orange-600 text-white"
         onClick={readNextReply}
       >
-        V
+        M
       </Button>
 
       {unreadCount > 0 && (

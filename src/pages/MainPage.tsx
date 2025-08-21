@@ -7,283 +7,333 @@ import MedicineDispenserBoxList from "@/components/Medicine/MedicineDispenserBox
 import { type Medicine } from "@/types/medicine";
 import { useTheme } from "@/context/themeContext";
 import {
-    calcNextDoseTime,
-    calcRemainingTimeForMedicine,
-    getDateStringInSGT,
-    parseSGTStringToDate,
-    scheduleSpeak,
+  calcNextDoseTime,
+  calcRemainingTimeForMedicine,
+  getDateStringInSGT,
+  parseSGTStringToDate,
+  scheduleSpeak,
 } from "@/lib/utils";
 import type { Reply } from "@/types/reply";
 
 function MainPage() {
-    const [isStarted, setIsStarted] = useState(false);
-    const [medicines, setMedicines] = useState<Medicine[]>([]);
-    const { theme, toggle } = useTheme();
-    const [, setCounter] = useState(0); // ticker
-    const alarmAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [isStarted, setIsStarted] = useState(false);
+  const [medicines, setMedicines] = useState<Medicine[]>([]);
+  const { theme, toggle } = useTheme();
+  const [, setCounter] = useState(0); // ticker
+  const alarmAudioRef = useRef<HTMLAudioElement | null>(null);
 
-    const [readReplyIds, setReadReplyIds] = useState<string[]>([]);
-    const [replies, setReplies] = useState<Reply[]>([]);
+  const [readReplyIds, setReadReplyIds] = useState<string[]>([]);
+  const [replies, setReplies] = useState<Reply[]>([]);
 
-    // --- Language state
-    const [languageSetting, setLanguageSetting] = useState("English"); // en = English, zh = Cantonese
+  // --- Language state
+  const [languageSetting, setLanguageSetting] = useState("English"); // en = English, zh = Cantonese
 
-    // --- Ticker updates every second // can change to every minute if needed
-    useEffect(() => {
-        if (!isStarted) return;
-        const interval = setInterval(
-            () => setCounter((prev) => prev + 1),
-            1000
+  // --- Ticker updates every second // can change to every minute if needed
+  useEffect(() => {
+    if (!isStarted) return;
+    const interval = setInterval(() => setCounter((prev) => prev + 1), 1000);
+    return () => clearInterval(interval);
+  }, [isStarted]);
+
+  useEffect(() => {
+    if (!isStarted) return;
+    const interval = setInterval(() => setCounter((prev) => prev + 1), 1000);
+    return () => clearInterval(interval);
+  }, [isStarted]);
+
+  // --- Poll replies every 15s
+  useEffect(() => {
+    if (!isStarted) return;
+    const fetchReplies = async () => {
+      try {
+        const res = await fetch(
+          "https://n8n.n8n-projects.dev/webhook/sheets?sheet=Email%20Replies%20Log"
         );
-        return () => clearInterval(interval);
-    }, [isStarted]);
+        const data = await res.json();
 
-    useEffect(() => {
-        if (!isStarted) return;
-        const interval = setInterval(
-            () => setCounter((prev) => prev + 1),
-            1000
-        );
-        return () => clearInterval(interval);
-    }, [isStarted]);
+        // @ts-expect-error assuming backend shape
+        const formatted: Reply[] = data.map((item) => ({
+          id: item.replyId,
+          date: item.date,
+          role: item.role,
+          message: item.message,
+        }));
 
-    // --- Poll replies every 15s
-    useEffect(() => {
-        if (!isStarted) return;
-        const fetchReplies = async () => {
-            try {
-                const res = await fetch(
-                    "https://n8n.n8n-projects.dev/webhook/sheets?sheet=Email%20Replies%20Log"
-                );
-                const data = await res.json();
-
-                // @ts-expect-error assuming backend shape
-                const formatted: Reply[] = data.map((item) => ({
-                    id: item.replyId,
-                    date: item.date,
-                    role: item.role,
-                    message: item.message,
-                }));
-
-                setReplies(formatted);
-            } catch (err) {
-                console.error("Failed to fetch replies:", err);
-            }
-        };
-
-        fetchReplies();
-        const interval = setInterval(fetchReplies, 15000);
-        return () => clearInterval(interval);
-    }, [isStarted]);
-
-    const unreadReplies: Reply[] = replies.filter(
-        (reply) => !readReplyIds.includes(reply.id)
-    );
-
-    const readNextReply = () => {
-        console.log(unreadReplies);
-        if (unreadReplies.length === 0) return;
-        const nextReply = unreadReplies[unreadReplies.length - 1];
-        console.log("Reading reply:", nextReply);
-        scheduleSpeak(nextReply.message);
-        setReadReplyIds((prev) => [...prev, nextReply.id]);
-        return;
+        setReplies(formatted);
+      } catch (err) {
+        console.error("Failed to fetch replies:", err);
+      }
     };
 
-    // --- Play/Stop Alarm Sound
-    const activeAlarms = medicines.filter(
-        (m) => calcRemainingTimeForMedicine(m) <= 0
-    );
+    fetchReplies();
+    const interval = setInterval(fetchReplies, 15000);
+    return () => clearInterval(interval);
+  }, [isStarted]);
 
-    // --- Play/Stop Alarm Sound
-    useEffect(() => {
-        if (!isStarted) return;
-        if (!alarmAudioRef.current) {
-            console.log("Initializing alarm audio");
-            alarmAudioRef.current = new Audio("./rickroll_but_lofi.mp3"); // put alarm.mp3 in /public
-            console.log("alarmAudioRef.current", alarmAudioRef.current);
-            alarmAudioRef.current.volume = 0.5; // adjust volume as needed
-            alarmAudioRef.current.loop = true;
-        }
+  const unreadReplies: Reply[] = replies.filter(
+    (reply) => !readReplyIds.includes(reply.id)
+  );
 
-        if (activeAlarms.length > 0) {
-            if (alarmAudioRef.current.paused) {
-                console.log("Playing alarm sound");
-                alarmAudioRef.current.play().catch(() => {
-                    console.error("Failed to play alarm sound");
-                });
-            }
-        } else {
-            alarmAudioRef.current.pause();
-            alarmAudioRef.current.currentTime = 0;
-        }
-    }, [activeAlarms, isStarted]);
+  const readNextReply = () => {
+    console.log(unreadReplies);
+    if (unreadReplies.length === 0) return;
+    const nextReply = unreadReplies[unreadReplies.length - 1];
+    console.log("Reading reply:", nextReply);
+    scheduleSpeak(nextReply.message);
+    setReadReplyIds((prev) => [...prev, nextReply.id]);
+    return;
+  };
 
-    // --- Dispense action
-    const handleDispense = async (medicineName: string) => {
-        const nowTime = new Date();
+  // --- Play/Stop Alarm Sound
+  const activeAlarms = medicines.filter(
+    (m) => calcRemainingTimeForMedicine(m) <= 0
+  );
 
-        setMedicines((prev) =>
-            prev.map((m) =>
-                m.medicineName === medicineName
-                    ? {
-                          ...m,
-                          nextDoseTime: calcNextDoseTime(
-                              m.timesPerDay,
-                              nowTime
-                          ),
-                      }
-                    : m
-            )
-        );
-
-        const med = medicines.find((m) => m.medicineName === medicineName);
-
-        if (!med) return;
-
-        const supposedTime = med.nextDoseTime;
-        const actualTime = nowTime;
-        const diffMinutes = Math.abs(
-            (actualTime.getTime() - supposedTime.getTime()) / 60000
-        );
-        const isMiss = diffMinutes > 15 ? 1 : 0;
-        const isEarlyDispense = actualTime < supposedTime ? 1 : 0;
-
-        const supposedLastTakenTime = getDateStringInSGT(supposedTime);
-        const actualLastTakenTime = getDateStringInSGT(actualTime);
-
-        try {
-            const res = await fetch(
-                "https://n8n.n8n-projects.dev/webhook/sheets-update?sheet=Logs",
-                {
-                    method: "POST",
-                    body: new URLSearchParams({
-                        medicineName: med.medicineName,
-                        supposedLastTakenTime,
-                        actualLastTakenTime,
-                        isMiss: isMiss.toString(),
-                        isEarlyDispense: isEarlyDispense.toString(),
-                    }),
-                }
-            );
-            const data = await res.text();
-            console.log("Dispense logged successfully:", data);
-        } catch (err) {
-            console.error("Failed to log dispense:", err);
-        }
-    };
-
-    useEffect(() => {
-        if (!isStarted) return;
-        const fetchData = async () => {
-            try {
-                // Fetch medicines
-                const res = await fetch(
-                    "https://n8n.n8n-projects.dev/webhook/sheets?sheet=Reminders"
-                );
-                const data = await res.json();
-
-                // Format medicines
-                // @ts-expect-error assuming backend shape
-                const formatted: Medicine[] = data.map((item) => ({
-                    id: item.row_number.toString(),
-                    medicineName: item["medicineName"] || "", // <-- note: capitalized key from your example
-                    dose: item["dose"] || "",
-                    timesPerDay: Number(item["timesPerDay"]) || 0,
-                    durationDays: Number(item["durationDays"]) || 0,
-                    instructions: item["instructions"]?.trim() || "",
-                    nextDoseTime: new Date(),
-                    remaining: 0,
-                }));
-
-                // Fetch logs
-                const logsRes = await fetch(
-                    "https://n8n.n8n-projects.dev/webhook/sheets?sheet=Logs"
-                );
-                const logsData = await logsRes.json();
-
-                // Map logs: get the latest actualLastTakenTime for each medicine
-                const latestLogs: Record<string, string> = {};
-                // @ts-expect-error assuming backend shape
-                logsData.forEach((log) => {
-                    if (log.medicineName && log.actualLastTakenTime) {
-                        latestLogs[log.medicineName] = log.actualLastTakenTime;
-                    }
-                });
-
-                // Merge logs into medicines
-                const merged: Medicine[] = formatted.map((med) => {
-                    med.nextDoseTime = calcNextDoseTime(
-                        med.timesPerDay,
-                        latestLogs[med.medicineName]
-                            ? parseSGTStringToDate(latestLogs[med.medicineName])
-                            : undefined
-                    );
-
-                    // can potentiall add alarms here if needed
-                    return med;
-                });
-                console.log(merged);
-                setMedicines(merged);
-            } catch (error) {
-                console.error("Failed to fetch medicines/logs:", error);
-            }
-        };
-
-        fetchData();
-    }, [isStarted]);
-
-    // --- Render
-    if (!isStarted) {
-        return (
-            <div className="flex flex-col items-center justify-center h-screen">
-                <Button
-                    className="px-6 py-3 text-lg rounded-xl shadow-md"
-                    onClick={() => setIsStarted(true)}
-                >
-                    Start
-                </Button>
-            </div>
-        );
+  // --- Play/Stop Alarm Sound
+  useEffect(() => {
+    if (!isStarted) return;
+    if (!alarmAudioRef.current) {
+      console.log("Initializing alarm audio");
+      alarmAudioRef.current = new Audio("./rickroll_but_lofi.mp3"); // put alarm.mp3 in /public
+      console.log("alarmAudioRef.current", alarmAudioRef.current);
+      alarmAudioRef.current.volume = 0.5; // adjust volume as needed
+      alarmAudioRef.current.loop = true;
     }
 
-    return (
-        <div className="flex flex-col p-4 space-y-4">
-            <div className="flex gap-4">
-                <VoiceButton
-                    readNextReply={readNextReply}
-                    unreadCount={unreadReplies.length}
-                />
-                <QueryButton languageSetting={languageSetting} />
-                {/* Push the right-side controls */}
-                <div className="ml-auto flex gap-2 items-center">
-                    {/* Language dropdown on the left of dark mode */}
-                    <select
-                        value={languageSetting}
-                        onChange={(e) => setLanguageSetting(e.target.value)}
-                        className="border rounded px-2 py-1"
-                    >
-                        <option value="English">English</option>
-                        <option value="Cantonese">Cantonese</option>
-                    </select>
+    if (activeAlarms.length > 0) {
+      if (alarmAudioRef.current.paused) {
+        console.log("Playing alarm sound");
+        alarmAudioRef.current.play().catch(() => {
+          console.error("Failed to play alarm sound");
+        });
+      }
+    } else {
+      alarmAudioRef.current.pause();
+      alarmAudioRef.current.currentTime = 0;
+    }
+  }, [activeAlarms, isStarted]);
 
-                    {/* Dark Mode toggle */}
-                    <Button
-                        onClick={toggle}
-                        className="px-3 py-1 rounded border shadow"
-                    >
-                        {theme === "light" ? "Dark Mode" : "Light Mode"}
-                    </Button>
-                </div>
-            </div>
-            <MedicineCardList medicines={medicines} />
-            {/* probably there's a better way to handle ondispense logic but suffices for now*/}
-            <MedicineDispenserBoxList
-                medicines={medicines}
-                onDispense={handleDispense}
-            />
-        </div>
+  // --- Dispense action
+  const handleDispense = async (medicineName: string) => {
+    const nowTime = new Date();
+
+    setMedicines((prev) =>
+      prev.map((m) =>
+        m.medicineName === medicineName
+          ? {
+              ...m,
+              nextDoseTime: calcNextDoseTime(m.timesPerDay, nowTime),
+            }
+          : m
+      )
     );
+
+    const med = medicines.find((m) => m.medicineName === medicineName);
+
+    if (!med) return;
+
+    const supposedTime = med.nextDoseTime;
+    const actualTime = nowTime;
+    const diffMinutes = Math.abs(
+      (actualTime.getTime() - supposedTime.getTime()) / 60000
+    );
+    const isMiss = diffMinutes > 15 ? 1 : 0;
+    const isEarlyDispense = actualTime < supposedTime ? 1 : 0;
+
+    const supposedLastTakenTime = getDateStringInSGT(supposedTime);
+    const actualLastTakenTime = getDateStringInSGT(actualTime);
+
+    try {
+      const res = await fetch(
+        "https://n8n.n8n-projects.dev/webhook/sheets-update?sheet=Logs",
+        {
+          method: "POST",
+          body: new URLSearchParams({
+            medicineName: med.medicineName,
+            supposedLastTakenTime,
+            actualLastTakenTime,
+            isMiss: isMiss.toString(),
+            isEarlyDispense: isEarlyDispense.toString(),
+          }),
+        }
+      );
+      const data = await res.text();
+      console.log("Dispense logged successfully:", data);
+    } catch (err) {
+      console.error("Failed to log dispense:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (!isStarted) return;
+    const fetchData = async () => {
+      try {
+        // Fetch medicines
+        const res = await fetch(
+          "https://n8n.n8n-projects.dev/webhook/sheets?sheet=Reminders"
+        );
+        const data = await res.json();
+
+        // Format medicines
+        // @ts-expect-error assuming backend shape
+        const formatted: Medicine[] = data.map((item) => ({
+          id: item.row_number.toString(),
+          medicineName: item["medicineName"] || "", // <-- note: capitalized key from your example
+          dose: item["dose"] || "",
+          timesPerDay: Number(item["timesPerDay"]) || 0,
+          durationDays: Number(item["durationDays"]) || 0,
+          instructions: item["instructions"]?.trim() || "",
+          nextDoseTime: new Date(),
+          remaining: 0,
+        }));
+
+        // Fetch logs
+        const logsRes = await fetch(
+          "https://n8n.n8n-projects.dev/webhook/sheets?sheet=Logs"
+        );
+        const logsData = await logsRes.json();
+
+        // Map logs: get the latest actualLastTakenTime for each medicine
+        const latestLogs: Record<string, string> = {};
+        // @ts-expect-error assuming backend shape
+        logsData.forEach((log) => {
+          if (log.medicineName && log.actualLastTakenTime) {
+            latestLogs[log.medicineName] = log.actualLastTakenTime;
+          }
+        });
+
+        // Merge logs into medicines
+        const merged: Medicine[] = formatted.map((med) => {
+          med.nextDoseTime = calcNextDoseTime(
+            med.timesPerDay,
+            latestLogs[med.medicineName]
+              ? parseSGTStringToDate(latestLogs[med.medicineName])
+              : undefined
+          );
+
+          // can potentiall add alarms here if needed
+          return med;
+        });
+        console.log(merged);
+        setMedicines(merged);
+      } catch (error) {
+        console.error("Failed to fetch medicines/logs:", error);
+      }
+    };
+
+    fetchData();
+  }, [isStarted]);
+
+  // --- Render
+  if (!isStarted) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <Button
+          className="px-6 py-3 text-lg rounded-xl shadow-md"
+          onClick={() => setIsStarted(true)}
+        >
+          Start
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 overflow-hidden">
+      {/* Pill Bottle Background */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0"
+        style={{
+          backgroundImage: "url('./pillbottle.jpg')",
+          backgroundSize: "contain",
+          backgroundPosition: "center",
+        }}
+      />
+
+      {/* Overlay Content */}
+      <div className="absolute inset-0 z-10">
+        {/* Button Overlay Container - positioned absolutely to match pill bottle buttons */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="relative w-full h-full max-w-4xl max-h-4xl">
+            {/* Query Button - positioned over left button on pill bottle */}
+            <div
+              className="absolute"
+              style={{
+                left: "42%",
+                top: "22.5%",
+                transform: "translate(-50%, -50%)",
+              }}
+            >
+              <QueryButton languageSetting={languageSetting} />
+            </div>
+
+            {/* Voice Button - positioned over right button on pill bottle */}
+            <div
+              className="absolute"
+              style={{
+                right: "46%",
+                top: "22.5%",
+                transform: "translate(50%, -50%)",
+              }}
+            >
+              <VoiceButton
+                readNextReply={readNextReply}
+                unreadCount={unreadReplies.length}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Controls in top-right corner */}
+        <div className="absolute top-4 right-4 flex gap-2 items-center z-20">
+          {/* Language dropdown */}
+          <select
+            value={languageSetting}
+            onChange={(e) => setLanguageSetting(e.target.value)}
+            className="border rounded px-2 py-1 bg-white/90 backdrop-blur-sm"
+          >
+            <option value="English">English</option>
+            <option value="Cantonese">Cantonese</option>
+          </select>
+
+          {/* Dark Mode toggle */}
+          <Button
+            onClick={toggle}
+            className="px-3 py-1 rounded border shadow bg-white/90 backdrop-blur-sm hover:bg-white/80"
+            variant="outline"
+          >
+            {theme === "light" ? "Dark Mode" : "Light Mode"}
+          </Button>
+        </div>
+
+        {/* Medicine Dispenser Boxes - positioned in center below buttons, smaller size */}
+        <div className="absolute top-1/4 left-49/100 transform -translate-x-1/2 translate-y-16 z-20">
+          <div className="bg-white/95 backdrop-blur-sm rounded-lg p-2 shadow-lg max-w-lg">
+            <MedicineDispenserBoxList
+              medicines={medicines}
+              onDispense={handleDispense}
+            />
+          </div>
+        </div>
+
+        {/* Medicine Cards - positioned at bottom center, arranged in columns */}
+        <div className="absolute bottom-7 left-1/2 transform -translate-x-1/2 z-20">
+          <div
+            className="bg-gray-800/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-gray-600"
+            style={{ maxWidth: "600px" }}
+          >
+            <h3
+              className="text-white text-center font-medium mb-2"
+              style={{ fontSize: "10px" }}
+            >
+              Medicine Status
+            </h3>
+            <MedicineCardList medicines={medicines} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default MainPage;
