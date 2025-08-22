@@ -8,6 +8,7 @@ interface VoiceButtonProps {
 
 const VoiceButton = ({ readNextReply, unreadCount = 0 }: VoiceButtonProps) => {
     const color = unreadCount === 0 ? "bg-yellow-700" : "bg-orange-600";
+    console.log(unreadCount);
     return (
         <div className="relative inline-block">
             <Button

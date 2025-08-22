@@ -100,7 +100,7 @@ function MainPage() {
         if (!isStarted) return;
         if (!alarmAudioRef.current) {
             console.log("Initializing alarm audio");
-            alarmAudioRef.current = new Audio("./rickroll_but_lofi.mp3"); // put alarm.mp3 in /public
+            alarmAudioRef.current = new Audio("./alarm.wav"); // put alarm.mp3 in /public
             console.log("alarmAudioRef.current", alarmAudioRef.current);
             alarmAudioRef.current.volume = 0.5; // adjust volume as needed
             alarmAudioRef.current.loop = true;
@@ -268,7 +268,7 @@ function MainPage() {
                         <div
                             className="absolute"
                             style={{
-                                left: "42%",
+                                left: "36%",
                                 top: "22.5%",
                                 transform: "translate(-50%, -50%)",
                             }}
@@ -280,7 +280,7 @@ function MainPage() {
                         <div
                             className="absolute"
                             style={{
-                                right: "46%",
+                                right: "42.5%",
                                 top: "22.5%",
                                 transform: "translate(50%, -50%)",
                             }}
@@ -296,27 +296,27 @@ function MainPage() {
                 {/* Controls in top-right corner */}
                 <div className="absolute top-4 right-4 flex gap-2 items-center z-20">
                     {/* Language dropdown */}
-                    <select
+                    {/* <select
                         value={languageSetting}
                         onChange={(e) => setLanguageSetting(e.target.value)}
                         className="border rounded px-2 py-1 bg-white/90 backdrop-blur-sm"
                     >
                         <option value="English">English</option>
                         <option value="Cantonese">Cantonese</option>
-                    </select>
+                    </select> */}
 
                     {/* Dark Mode toggle */}
-                    <Button
+                    {/* <Button
                         onClick={toggle}
                         className="px-3 py-1 rounded border shadow bg-white/90 backdrop-blur-sm hover:bg-white/80"
                         variant="outline"
                     >
                         {theme === "light" ? "Dark Mode" : "Light Mode"}
-                    </Button>
+                    </Button> */}
                 </div>
 
                 {/* Medicine Dispenser Boxes - positioned in center below buttons, smaller size */}
-                <div className="absolute top-1/4 left-49/100 transform -translate-x-1/2 translate-y-16 z-20">
+                <div className="absolute top-1/4 left-48/100 transform -translate-x-1/2 translate-y-20 z-20">
                     <div className=" rounded-lg p-2 shadow-lg max-w-lg">
                         <MedicineDispenserBoxList
                             medicines={medicines}
@@ -326,7 +326,7 @@ function MainPage() {
                 </div>
 
                 {/* Medicine Cards - positioned at bottom center, arranged in columns */}
-                <div className="absolute bottom-7 left-1/2 transform -translate-x-1/2 z-20">
+                <div className="absolute bottom-7 left-1/3 transform -translate-x-28/100 z-20">
                     <div
                         className="bg-gray-800/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-gray-600"
                         style={{ maxWidth: "600px" }}
