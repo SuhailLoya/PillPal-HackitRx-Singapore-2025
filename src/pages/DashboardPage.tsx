@@ -94,10 +94,10 @@ export default function DashboardPage() {
                                     Medicine
                                 </th>
                                 <th className="px-4 py-2 text-left">
-                                    Supposed Last Taken
+                                    Supposed Time Taken
                                 </th>
                                 <th className="px-4 py-2 text-left">
-                                    Actual Last Taken
+                                    Actual Time Taken
                                 </th>
                                 <th className="px-4 py-2 text-left">Missed?</th>
                                 <th className="px-4 py-2 text-left">
